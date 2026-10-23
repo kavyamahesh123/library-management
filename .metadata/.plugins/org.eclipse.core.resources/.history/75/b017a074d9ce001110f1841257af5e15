@@ -1,0 +1,753 @@
+openapi: 3.0.3
+info:
+  title: Library Management
+  version: 1.0.0
+  description: |
+    REST API's' for managing authors, books, library members, book borrowing,
+    returns, and member borrowing history.
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: Authors
+    description: Create, retrieve, and update authors
+  - name: Books
+    description: Create, retrieve, update, and delete books
+  - name: Members
+    description: Register and manage library members
+  - name: Borrowing
+    description: Borrow books, return books, and retrieve borrowing history
+
+paths:
+  /api/authors:
+    post:
+      tags: [Authors]
+      summary: Create an author
+      operationId: createAuthor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAuthorRequest'
+            example:
+              name: Robert Martin
+              email: robert@example.com
+      responses:
+        '201':
+          description: Author created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      tags: [Authors]
+      summary: Get all authors
+      operationId: getAllAuthors
+      responses:
+        '200':
+          description: Authors retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorListEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/authors/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Authors]
+      summary: Get an author by ID
+      operationId: getAuthorById
+      responses:
+        '200':
+          description: Author retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags: [Authors]
+      summary: Update an author
+      operationId: updateAuthor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAuthorRequest'
+            example:
+              name: Robert C. Martin
+              email: robert@example.com
+      responses:
+        '200':
+          description: Author updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/books:
+    post:
+      tags: [Books]
+      summary: Create a book
+      operationId: createBook
+      description: If available is omitted or null, the service defaults it to true.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookRequest'
+            example:
+              title: Clean Code
+              isbn: ISBN-001
+              available: true
+              authorId: 1
+      responses:
+        '201':
+          description: Book created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      tags: [Books]
+      summary: Get all books
+      operationId: getAllBooks
+      responses:
+        '200':
+          description: Books retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookListEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/books/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Books]
+      summary: Get a book by ID
+      operationId: getBookById
+      responses:
+        '200':
+          description: Book retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags: [Books]
+      summary: Update a book
+      operationId: updateBook
+      description: Only non-null fields supplied in the request are updated by the service.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBookRequest'
+            example:
+              title: Clean Code, Revised
+              available: true
+      responses:
+        '200':
+          description: Book updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags: [Books]
+      summary: Delete a book
+      operationId: deleteBook
+      responses:
+        '200':
+          description: Book deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/members:
+    post:
+      tags: [Members]
+      summary: Register a member
+      operationId: createMember
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMemberRequest'
+            example:
+              name: Kavya
+              email: kavya@example.com
+              phone: '9876543210'
+      responses:
+        '201':
+          description: Member registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      tags: [Members]
+      summary: Get all members
+      operationId: getAllMembers
+      responses:
+        '200':
+          description: Members retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberListEnvelope'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/members/{id}:
+    parameters:
+      - $ref: '#/components/parameters/Id'
+    get:
+      tags: [Members]
+      summary: Get a member by ID
+      operationId: getMemberById
+      responses:
+        '200':
+          description: Member retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags: [Members]
+      summary: Update a member
+      operationId: updateMember
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMemberRequest'
+            example:
+              name: Kavya Updated
+              phone: '9999999999'
+      responses:
+        '200':
+          description: Member updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/borrows:
+    post:
+      tags: [Borrowing]
+      summary: Borrow a book
+      operationId: borrowBook
+      description: |
+        Creates an active borrow record, marks the book unavailable, and calculates
+        the due date using the configured loan period. A member cannot borrow the
+        same book again while an active or overdue record exists, and the configured
+        active-borrow limit is enforced.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBorrowRequest'
+            example:
+              bookId: 1
+              memberId: 1
+      responses:
+        '201':
+          description: Book borrowed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BorrowEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/borrows/{id}/return:
+    put:
+      tags: [Borrowing]
+      summary: Return a borrowed book
+      operationId: returnBorrowedBook
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Borrow record ID, not the book ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '201':
+          description: Book returned successfully (matches the current controller response)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BorrowEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/members/{id}/borrows:
+    get:
+      tags: [Borrowing]
+      summary: Get a member's borrowing history
+      operationId: getMemberBorrowHistory
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Member ID
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: Borrowing history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BorrowListEnvelope'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      description: Resource ID
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+  responses:
+    BadRequest:
+      description: Invalid request body or validation failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    NotFound:
+      description: Requested resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Conflict:
+      description: Resource conflict, such as a duplicate or invalid borrowing state
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    InternalServerError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+  schemas:
+    CreateAuthorRequest:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+          example: Robert Martin
+        email:
+          type: string
+          format: email
+          example: robert@example.com
+    UpdateAuthorRequest:
+      type: object
+      description: Fields are optional for partial updates.
+      properties:
+        name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+
+    AuthorResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: Robert Martin
+        email:
+          type: string
+          format: email
+          example: robert@example.com
+
+    CreateBookRequest:
+      type: object
+      required: [title, isbn, authorId]
+      properties:
+        title:
+          type: string
+          example: Clean Code
+        isbn:
+          type: string
+          example: ISBN-001
+        available:
+          type: boolean
+          nullable: true
+          default: true
+          description: Defaults to true when omitted or null during creation.
+        authorId:
+          type: integer
+          format: int64
+          example: 1
+    UpdateBookRequest:
+      type: object
+      description: Fields are optional for partial updates.
+      properties:
+        title:
+          type: string
+          nullable: true
+        isbn:
+          type: string
+          nullable: true
+        available:
+          type: boolean
+          nullable: true
+        authorId:
+          type: integer
+          format: int64
+          nullable: true
+
+    BookResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        title:
+          type: string
+          example: Clean Code
+        isbn:
+          type: string
+          example: ISBN-001
+        available:
+          type: boolean
+          example: true
+        authorId:
+          type: integer
+          format: int64
+          example: 1
+        authorName:
+          type: string
+          example: Robert Martin
+
+    CreateMemberRequest:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+          example: Kavya
+        email:
+          type: string
+          format: email
+          example: kavya@example.com
+        phone:
+          type: string
+          example: '9876543210'
+    UpdateMemberRequest:
+      type: object
+      description: Fields are optional for partial updates.
+      properties:
+        name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+
+    MemberResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: Kavya
+        email:
+          type: string
+          format: email
+          example: kavya@example.com
+        phone:
+          type: string
+          example: '9876543210'
+
+    CreateBorrowRequest:
+      type: object
+      required: [bookId, memberId]
+      properties:
+        bookId:
+          type: integer
+          format: int64
+          minimum: 1
+          example: 1
+        memberId:
+          type: integer
+          format: int64
+          minimum: 1
+          example: 1
+
+    BorrowResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        bookId:
+          type: integer
+          format: int64
+          example: 1
+        bookName:
+          type: string
+          example: Clean Code
+        memberId:
+          type: integer
+          format: int64
+          example: 1
+        memberName:
+          type: string
+          example: Kavya
+        borrowedAt:
+          type: string
+          format: date
+          example: '2026-10-23'
+        dueDate:
+          type: string
+          format: date
+          example: '2026-11-06'
+        returnedAt:
+          type: string
+          format: date
+          nullable: true
+          example: null
+        status:
+          type: string
+          enum: [ACTIVE, OVERDUE, RETURNED]
+          example: ACTIVE
+
+    AuthorEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 201
+        message:
+          type: string
+          example: Successfully created an author
+        responseBody:
+          $ref: '#/components/schemas/AuthorResponse'
+    AuthorListEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+        responseBody:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorResponse'
+
+    BookEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 201
+        message:
+          type: string
+        responseBody:
+          $ref: '#/components/schemas/BookResponse'
+    BookListEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+        responseBody:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookResponse'
+
+    MemberEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 201
+        message:
+          type: string
+        responseBody:
+          $ref: '#/components/schemas/MemberResponse'
+    MemberListEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+        responseBody:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberResponse'
+
+    BorrowEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 201
+        message:
+          type: string
+        responseBody:
+          $ref: '#/components/schemas/BorrowResponse'
+    BorrowListEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+        responseBody:
+          type: array
+          items:
+            $ref: '#/components/schemas/BorrowResponse'
+
+    MessageEnvelope:
+  type: object
+  properties:
+    responseCode:
+      type: integer
+      example: 200
+    message:
+      type: string
+      example: "Successfully deleted a book with ID: 1"
+
+    ApiError:
+  type: object
+  description: Error shape based on the application's global exception response.
+  properties:
+    status:
+      type: integer
+      example: 404
+    error:
+      type: string
+      example: "Not Found"
+    message:
+      type: string
+      example: "Book not found with ID: 99"
+    path:
+      type: string
+      example: "/api/books/99"

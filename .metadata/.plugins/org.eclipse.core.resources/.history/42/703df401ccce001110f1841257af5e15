@@ -1,0 +1,12 @@
+package com.example.demo.constants;
+
+public class Constants {
+
+	public static final String RESPONSE_CODE = "responseCode";
+	public static final String MESSAGE = "message";
+	public static final String RESPONSE_BODY = "responseBody";
+	public static final String INTERNAL_SERVER_GENERIC_MESSAGE = "Internal server error while processing the request";
+	public static final String UNEXPECTED_ERROR_MESSAGE = "An unexpected error occurred.";
+	public static final String AUTHOR_NOT_FOUND = "Author not found with ID: ";
+	public static final String BOOK_NOT_FOUND = "Book not found with ID: ";
+}

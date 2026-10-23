@@ -1,0 +1,26 @@
+package com.example.demo.service;
+
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.example.demo.repo.AuthorRepository;
+import com.example.demo.repo.BookRepository;
+import com.example.demo.repo.BorrowBookRepository;
+import com.example.demo.repo.MemberRepository;
+
+@ExtendWith(MockitoExtension.class)
+public class LibraryManagementServiceTest {
+
+	@Mock
+	private AuthorRepository libraryManagementRepository;
+	
+	@Mock
+	private BookRepository bookRepository;
+
+	@Mock
+	private MemberRepository memberRepository;
+
+	@Mock
+	private BorrowBookRepository borrowBookRepository;
+}

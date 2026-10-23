@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?><testrun name="LibraryManagementServiceTest" project="library-management-demo" tests="3" started="3" failures="0" errors="0" ignored="0">
+  <testsuite name="com.example.demo.service.LibraryManagementServiceTest" time="2.988" displayname="LibraryManagementServiceTest" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]">
+    <testcase name="createAuthor_Success" classname="com.example.demo.service.LibraryManagementServiceTest" time="2.972" displayname="createAuthor_Success()" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]/[method:createAuthor_Success()]"/>
+    <testcase name="createAuthorDuplicateEmailThrowsException" classname="com.example.demo.service.LibraryManagementServiceTest" time="0.007" displayname="createAuthorDuplicateEmailThrowsException()" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]/[method:createAuthorDuplicateEmailThrowsException()]"/>
+    <testcase name="getAllAuthorsSuccess" classname="com.example.demo.service.LibraryManagementServiceTest" time="0.007" displayname="getAllAuthorsSuccess()" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]/[method:getAllAuthorsSuccess()]"/>
+  </testsuite>
+</testrun>

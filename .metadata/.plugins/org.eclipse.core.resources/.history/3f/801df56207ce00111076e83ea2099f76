@@ -1,0 +1,9 @@
+package com.example.entities;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "borrowers")
+public class Member {
+
+}

@@ -1,0 +1,350 @@
+package com.example.demo.service;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import com.example.demo.dto.AuthorResponse;
+import com.example.demo.dto.BookResponse;
+import com.example.demo.dto.BorrowResponse;
+import com.example.demo.dto.CreateAuthorRequest;
+import com.example.demo.dto.CreateBookRequest;
+import com.example.demo.dto.CreateBorrowRequest;
+import com.example.demo.dto.CreateMemberRequest;
+import com.example.demo.dto.MemberResponse;
+import com.example.demo.entities.Author;
+import com.example.demo.entities.Book;
+import com.example.demo.entities.BorrowRecord;
+import com.example.demo.entities.BorrowStatus;
+import com.example.demo.entities.Member;
+import com.example.demo.exceptions.BookAlreadyReturnedException;
+import com.example.demo.exceptions.DuplicateResourceException;
+import com.example.demo.exceptions.ResourceNotFoundException;
+import com.example.demo.repo.AuthorRepository;
+import com.example.demo.repo.BookRepository;
+import com.example.demo.repo.BorrowBookRepository;
+import com.example.demo.repo.MemberRepository;
+
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
+
+@Service
+public class LibraryManagementService {
+
+	@Value("${library.loan-period-days}")
+	private long loanDays;
+
+	private final AuthorRepository libraryManagementRepository;
+	private final BookRepository bookRepository;
+	private final MemberRepository memberRepository;
+	private final BorrowBookRepository borrowBookRepository;
+
+	public LibraryManagementService(AuthorRepository libraryManagementRepository, BookRepository bookRepository,
+			MemberRepository memberRepository, BorrowBookRepository borrowBookRepository) {
+		this.libraryManagementRepository = libraryManagementRepository;
+		this.bookRepository = bookRepository;
+		this.memberRepository = memberRepository;
+		this.borrowBookRepository = borrowBookRepository;
+	}
+
+	public AuthorResponse createAuthor(@Valid CreateAuthorRequest request) {
+
+		if (request.getEmail() != null && libraryManagementRepository.existsByEmail(request.getEmail())) {
+			throw new DuplicateResourceException("An author with this email already exists.");
+		}
+
+		Author author = new Author();
+		author.setName(request.getName());
+		author.setEmail(request.getEmail());
+
+		Author savedAuthor = libraryManagementRepository.save(author);
+
+		return new AuthorResponse(savedAuthor.getId(), savedAuthor.getName(), savedAuthor.getEmail());
+	}
+
+	public List<AuthorResponse> getAllAuthors() {
+
+		return libraryManagementRepository.findAll().stream()
+				.map(author -> new AuthorResponse(author.getId(), author.getName(), author.getEmail())).toList();
+	}
+
+	public AuthorResponse getAuthorById(Long id) {
+
+		Author author = libraryManagementRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Author not found with ID: " + id));
+
+		return new AuthorResponse(author.getId(), author.getName(), author.getEmail());
+	}
+
+	public AuthorResponse updateAuthor(Long id, @Valid CreateAuthorRequest request) {
+
+		// 1. Check whether the author exists
+		Author author = libraryManagementRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Author not found with ID: " + id));
+
+		// 2. Update name only if provided
+		if (request.getName() != null) {
+			author.setName(request.getName());
+		}
+
+		// 3. Update email only if provided
+		if (request.getEmail() != null) {
+
+			// Check whether the email belongs to another author
+			if (!request.getEmail().equals(author.getEmail())
+					&& libraryManagementRepository.existsByEmail(request.getEmail())) {
+
+				throw new DuplicateResourceException("Email already exists: " + request.getEmail());
+			}
+
+			author.setEmail(request.getEmail());
+		}
+
+		// 4. Save updated author
+		Author updatedAuthor = libraryManagementRepository.save(author);
+
+		// 5. Return response
+		return new AuthorResponse(updatedAuthor.getId(), updatedAuthor.getName(), updatedAuthor.getEmail());
+	}
+
+	public BookResponse createNewBook(@Valid CreateBookRequest request) {
+
+		// 1. Check whether ISBN already exists
+		if (bookRepository.existsByIsbn(request.getIsbn())) {
+			throw new DuplicateResourceException("Book with ISBN " + request.getIsbn() + " already exists");
+		}
+
+		// 2. Find the author
+		Author author = libraryManagementRepository.findById(request.getAuthorId())
+				.orElseThrow(() -> new ResourceNotFoundException("Author not found with ID: " + request.getAuthorId()));
+
+		// 3. Convert DTO to entity
+		Book book = new Book();
+		book.setTitle(request.getTitle());
+		book.setIsbn(request.getIsbn());
+		Boolean available = request.getAvailable() != null ? request.getAvailable() : false;
+		book.setAvailable(available);
+		book.setAuthor(author);
+
+		// 4. Save the book
+		Book savedBook = bookRepository.save(book);
+
+		// 5. Convert entity to response DTO
+		return new BookResponse(savedBook.getId(), savedBook.getTitle(), savedBook.getIsbn(), savedBook.getAvailable(),
+				savedBook.getAuthor().getId(), savedBook.getAuthor().getName());
+	}
+
+	public List<BookResponse> getAllBooks() {
+
+		return bookRepository.findAll().stream().map(book -> new BookResponse(book.getId(), book.getTitle(),
+				book.getIsbn(), book.getAvailable(), book.getAuthor().getId(), book.getAuthor().getName())).toList();
+	}
+
+	public BookResponse getBookById(Long id) {
+
+		Book book = bookRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Book not found with ID: " + id));
+		return new BookResponse(book.getId(), book.getTitle(), book.getIsbn(), book.getAvailable(),
+				book.getAuthor().getId(), book.getAuthor().getName());
+
+	}
+
+	public BookResponse updateBook(Long id, @Valid CreateBookRequest request) {
+
+		// 1. Find the existing book
+		Book book = bookRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Book not found with ID: " + id));
+
+		// 2. Update title only if provided
+		if (request.getTitle() != null) {
+			book.setTitle(request.getTitle());
+		}
+
+		// 3. Update ISBN only if provided
+		if (request.getIsbn() != null) {
+			book.setIsbn(request.getIsbn());
+		}
+
+		// 4. Update availability only if provided
+		if (request.getAvailable() != null) {
+			book.setAvailable(request.getAvailable());
+		}
+
+		// 5. Update author only if authorId is provided
+		if (request.getAuthorId() != null) {
+
+			Author author = libraryManagementRepository.findById(request.getAuthorId()).orElseThrow(
+					() -> new ResourceNotFoundException("Author not found with ID: " + request.getAuthorId()));
+
+			book.setAuthor(author);
+		}
+
+		// 6. Save the updated book
+		Book updatedBook = bookRepository.save(book);
+
+		// 7. Return response
+		return new BookResponse(updatedBook.getId(), updatedBook.getTitle(), updatedBook.getIsbn(),
+				updatedBook.getAvailable(), updatedBook.getAuthor().getId(), updatedBook.getAuthor().getName());
+	}
+
+	public BookResponse deletebook(Long id) {
+
+		Book book = bookRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Book not found with ID: " + id));
+
+		BookResponse response = new BookResponse(book.getId(), book.getTitle(), book.getIsbn(), book.getAvailable(),
+				book.getAuthor().getId(), book.getAuthor().getName());
+
+		bookRepository.delete(book);
+
+		return response;
+	}
+
+	public MemberResponse createNewMember(@Valid CreateMemberRequest request) {
+
+		if (request.getEmail() != null && memberRepository.existsByEmail(request.getEmail())) {
+			throw new DuplicateResourceException("A Member with this email already exists.");
+		}
+
+		Member member = new Member();
+		member.setName(request.getName());
+		member.setEmail(request.getEmail());
+		member.setPhone(request.getPhone());
+
+		Member savedMember = memberRepository.save(member);
+
+		return new MemberResponse(savedMember.getId(), savedMember.getName(), savedMember.getEmail(),
+				savedMember.getPhone());
+
+	}
+
+	public List<MemberResponse> getAllMembers() {
+
+		return memberRepository.findAll().stream().map(
+				member -> new MemberResponse(member.getId(), member.getName(), member.getEmail(), member.getPhone()))
+				.toList();
+	}
+
+	public MemberResponse getMemberById(Long id) {
+
+		Member member = memberRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Member not found with ID: " + id));
+		return new MemberResponse(member.getId(), member.getName(), member.getEmail(), member.getPhone());
+	}
+
+	public MemberResponse updateMember(Long id, @Valid CreateMemberRequest request) {
+
+		// 1. Check whether the author exists
+		Member member = memberRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Member not found with ID: " + id));
+
+		// 2. Update name only if provided
+		if (request.getName() != null) {
+			member.setName(request.getName());
+		}
+
+		// 3. Update email only if provided
+		if (request.getEmail() != null) {
+
+			// Check whether the email belongs to another author
+			if (!request.getEmail().equals(member.getEmail()) && memberRepository.existsByEmail(request.getEmail())) {
+
+				throw new DuplicateResourceException("Email already exists: " + request.getEmail());
+			}
+
+			member.setEmail(request.getEmail());
+		}
+		if (request.getPhone() != null) {
+			member.setPhone(request.getPhone());
+		}
+
+		// 4. Save updated author
+		Member updatedMember = memberRepository.save(member);
+
+		// 5. Return response
+		return new MemberResponse(updatedMember.getId(), updatedMember.getName(), updatedMember.getEmail(),
+				updatedMember.getPhone());
+
+	}
+
+	@Transactional
+	public BorrowResponse borrowNewBook(@Valid CreateBorrowRequest request) {
+
+		Book book = bookRepository.findById(request.getBookId())
+				.orElseThrow(() -> new ResourceNotFoundException("Book not found with ID: " + request.getBookId()));
+
+		if (Boolean.TRUE.equals(book.getAvailable())) {
+
+			new ResourceNotFoundException("The requested book is not avilable in the library");
+		}
+
+		Member member = memberRepository.findById(request.getMemberId())
+				.orElseThrow(() -> new ResourceNotFoundException("Member not found with ID: " + request.getMemberId()));
+
+		BorrowRecord br = new BorrowRecord();
+		br.setBook(book);
+		br.setMember(member);
+		LocalDate borrowedAt = LocalDate.now();
+		br.setBorrowedAt(borrowedAt);
+		LocalDate dueDate = borrowedAt.plusDays(loanDays);
+		br.setDueDate(dueDate);
+
+		br.setReturnedAt(null);
+		br.setStatus(BorrowStatus.ACTIVE);
+
+		book.setAvailable(false);
+		bookRepository.save(book);
+
+		BorrowRecord savedRecord = borrowBookRepository.save(br);
+
+		return new BorrowResponse(savedRecord.getId(), savedRecord.getBook().getId(), savedRecord.getBook().getTitle(),
+				savedRecord.getMember().getId(), savedRecord.getMember().getName(), savedRecord.getBorrowedAt(),
+				savedRecord.getDueDate(), savedRecord.getReturnedAt(), savedRecord.getStatus());
+
+	}
+
+	@Transactional
+	public BorrowResponse returnBorrowedBook(Long id) {
+
+		BorrowRecord br = borrowBookRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Borrow record not found with ID: " + id));
+
+		if (br.getStatus() == BorrowStatus.RETURNED) {
+			throw new BookAlreadyReturnedException("This book has already been returned");
+		}
+
+		br.setReturnedAt(LocalDate.now());
+		br.setStatus(BorrowStatus.RETURNED);
+
+		Book book = br.getBook();
+		book.setAvailable(true);
+
+		bookRepository.save(book);
+		BorrowRecord updatedRecord = borrowBookRepository.save(br);
+
+		return new BorrowResponse(updatedRecord.getId(), updatedRecord.getBook().getId(),
+				updatedRecord.getBook().getTitle(), updatedRecord.getMember().getId(),
+				updatedRecord.getMember().getName(), updatedRecord.getBorrowedAt(), updatedRecord.getDueDate(),
+				updatedRecord.getReturnedAt(), updatedRecord.getStatus());
+	}
+
+	public List<BorrowResponse> getMemberBorrowHistory(Long memberId) {
+
+		// 1. Check whether the member exists
+		memberRepository.findById(memberId)
+				.orElseThrow(() -> new ResourceNotFoundException("Member not found with ID: " + id));
+
+		// 2. Fetch all borrow records for this member
+		List<BorrowRecord> records = borrowBookRepository.findByMemberId(memberId);
+
+		// 3. Convert entities to response DTOs
+		return records.stream()
+				.map(record -> new BorrowResponse(record.getId(), record.getBook().getId(), record.getBook().getTitle(),
+						record.getMember().getId(), record.getMember().getName(), record.getBorrowedAt(),
+						record.getDueDate(), record.getReturnedAt(), record.getStatus()))
+				.toList();
+	}
+
+}

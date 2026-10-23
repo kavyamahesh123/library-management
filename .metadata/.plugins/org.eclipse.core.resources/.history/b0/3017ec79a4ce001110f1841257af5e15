@@ -1,0 +1,99 @@
+package com.example.demo.dto;
+
+import java.time.LocalDate;
+
+import com.example.demo.entities.BorrowStatus;
+
+public class BorrowResponse {
+
+	private Long id;
+    private Long bookId;
+    private Long memberId;
+    private LocalDate borrowedAt;
+    private LocalDate dueDate;
+    private LocalDate returnedAt;
+    private BorrowStatus status;
+    private String bookName;
+    private String memberName;
+
+    public BorrowResponse() {
+    }
+
+    public BorrowResponse(
+            Long id,
+            Long bookId,
+            String bookName,
+            Long memberId,
+            String memberName,
+            LocalDate borrowedAt,
+            LocalDate dueDate,
+            LocalDate returnedAt,
+            BorrowStatus status) {
+
+        this.id = id;
+        this.bookId = bookId;
+        this.memberId = memberId;
+        this.borrowedAt = borrowedAt;
+        this.dueDate = dueDate;
+        this.returnedAt = returnedAt;
+        this.status = status;
+        this.bookName = bookName;
+        this.memberName = memberName;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getBookId() {
+        return bookId;
+    }
+
+    public void setBookId(Long bookId) {
+        this.bookId = bookId;
+    }
+
+    public Long getMemberId() {
+        return memberId;
+    }
+
+    public void setMemberId(Long memberId) {
+        this.memberId = memberId;
+    }
+
+    public LocalDate getBorrowedAt() {
+        return borrowedAt;
+    }
+
+    public void setBorrowedAt(LocalDate borrowedAt) {
+        this.borrowedAt = borrowedAt;
+    }
+
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(LocalDate dueDate) {
+        this.dueDate = dueDate;
+    }
+
+    public LocalDate getReturnedAt() {
+        return returnedAt;
+    }
+
+    public void setReturnedAt(LocalDate returnedAt) {
+        this.returnedAt = returnedAt;
+    }
+
+    public BorrowStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(BorrowStatus status) {
+        this.status = status;
+    }
+}

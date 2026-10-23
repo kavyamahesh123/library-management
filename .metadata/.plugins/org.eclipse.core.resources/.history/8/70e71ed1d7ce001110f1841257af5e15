@@ -1,0 +1,638 @@
+package com.example.demo.service;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import com.example.demo.dto.AuthorResponse;
+import com.example.demo.dto.BookResponse;
+import com.example.demo.dto.BorrowResponse;
+import com.example.demo.dto.CreateAuthorRequest;
+import com.example.demo.dto.CreateBookRequest;
+import com.example.demo.dto.CreateBorrowRequest;
+import com.example.demo.dto.CreateMemberRequest;
+import com.example.demo.dto.MemberResponse;
+import com.example.demo.entities.Author;
+import com.example.demo.entities.Book;
+import com.example.demo.entities.BorrowRecord;
+import com.example.demo.entities.BorrowStatus;
+import com.example.demo.entities.Member;
+import com.example.demo.exceptions.BookAlreadyBorrowedException;
+import com.example.demo.exceptions.BookAlreadyReturnedException;
+import com.example.demo.exceptions.BorrowLimitExceededException;
+import com.example.demo.exceptions.DuplicateResourceException;
+import com.example.demo.exceptions.ResourceNotFoundException;
+import com.example.demo.repo.AuthorRepository;
+import com.example.demo.repo.BookRepository;
+import com.example.demo.repo.BorrowBookRepository;
+import com.example.demo.repo.MemberRepository;
+
+@ExtendWith(MockitoExtension.class)
+class LibraryManagementServiceTest {
+
+	@Mock
+	private AuthorRepository libraryManagementRepository;
+
+	@Mock
+	private BookRepository bookRepository;
+
+	@Mock
+	private MemberRepository memberRepository;
+
+	@Mock
+	private BorrowBookRepository borrowBookRepository;
+
+	@InjectMocks
+	private LibraryManagementService service;
+
+	private Author author;
+	private Book book;
+	private Member member;
+	private BorrowRecord borrowRecord;
+
+	@BeforeEach
+	void setUp() {
+
+		ReflectionTestUtils.setField(service, "loanDays", 14L);
+		ReflectionTestUtils.setField(service, "maxActiveBorrowsPerMember", 5);
+
+		author = new Author();
+		author.setId(1L);
+		author.setName("Robert Martin");
+		author.setEmail("robert@example.com");
+
+		book = new Book();
+		book.setId(1L);
+		book.setTitle("Java");
+		book.setIsbn("ISBN-001");
+		book.setAvailable(true);
+		book.setAuthor(author);
+
+		member = new Member();
+		member.setId(1L);
+		member.setName("Kavya");
+		member.setEmail("kavya@example.com");
+		member.setPhone("9876543210");
+
+		borrowRecord = new BorrowRecord();
+		borrowRecord.setId(1L);
+		borrowRecord.setBook(book);
+		borrowRecord.setMember(member);
+		borrowRecord.setBorrowedAt(LocalDate.now());
+		borrowRecord.setDueDate(LocalDate.now().plusDays(14));
+		borrowRecord.setReturnedAt(null);
+		borrowRecord.setStatus(BorrowStatus.ACTIVE);
+	}
+
+	@Test
+	void createAuthor_Success() {
+
+		CreateAuthorRequest request = new CreateAuthorRequest();
+		request.setName("Robert Martin");
+		request.setEmail("robert@example.com");
+
+		when(libraryManagementRepository.existsByEmail(request.getEmail())).thenReturn(false);
+		when(libraryManagementRepository.save(any(Author.class))).thenAnswer(invocation -> {
+			Author saved = invocation.getArgument(0);
+			saved.setId(1L);
+			return saved;
+		});
+
+		AuthorResponse response = service.createAuthor(request);
+
+		assertNotNull(response);
+		assertEquals(1L, response.getId());
+		assertEquals("Robert Martin", response.getName());
+		assertEquals("robert@example.com", response.getEmail());
+
+		verify(libraryManagementRepository).save(any(Author.class));
+	}
+
+	@Test
+	void createAuthorDuplicateEmailThrowsException() {
+
+		CreateAuthorRequest request = new CreateAuthorRequest();
+		request.setName("Robert Martin");
+		request.setEmail("robert@example.com");
+
+		when(libraryManagementRepository.existsByEmail(request.getEmail())).thenReturn(true);
+
+		assertThrows(DuplicateResourceException.class, () -> service.createAuthor(request));
+
+		verify(libraryManagementRepository, never()).save(any(Author.class));
+	}
+
+	@Test
+	void getAllAuthorsSuccess() {
+
+		when(libraryManagementRepository.findAll()).thenReturn(List.of(author));
+
+		List<AuthorResponse> result = service.getAllAuthors();
+
+		assertEquals(1, result.size());
+		assertEquals("Robert Martin", result.get(0).getName());
+	}
+
+	@Test
+	void getAuthorByIdSuccess() {
+
+		when(libraryManagementRepository.findById(1L)).thenReturn(Optional.of(author));
+
+		AuthorResponse response = service.getAuthorById(1L);
+
+		assertEquals(1L, response.getId());
+		assertEquals("Robert Martin", response.getName());
+	}
+
+	@Test
+	void getAuthorByIdNotFound() {
+
+		when(libraryManagementRepository.findById(99L)).thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () -> service.getAuthorById(99L));
+	}
+
+	@Test
+	void updateAuthorSuccess() {
+
+		CreateAuthorRequest request = new CreateAuthorRequest();
+		request.setName("Updated Author");
+		request.setEmail("updated@example.com");
+
+		when(libraryManagementRepository.findById(1L)).thenReturn(Optional.of(author));
+		when(libraryManagementRepository.existsByEmail("updated@example.com")).thenReturn(false);
+		when(libraryManagementRepository.save(any(Author.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		AuthorResponse response = service.updateAuthor(1L, request);
+
+		assertEquals("Updated Author", response.getName());
+		assertEquals("updated@example.com", response.getEmail());
+	}
+
+	@Test
+	void updateAuthorNotFound() {
+
+		when(libraryManagementRepository.findById(99L)).thenReturn(Optional.empty());
+
+		CreateAuthorRequest request = new CreateAuthorRequest();
+
+		assertThrows(ResourceNotFoundException.class, () -> service.updateAuthor(99L, request));
+	}
+
+	@Test
+	void updateAuthorDuplicateEmail() {
+
+		Author anotherAuthor = new Author();
+		anotherAuthor.setId(2L);
+		anotherAuthor.setName("Another Author");
+		anotherAuthor.setEmail("another@example.com");
+
+		CreateAuthorRequest request = new CreateAuthorRequest();
+		request.setEmail("another@example.com");
+
+		when(libraryManagementRepository.findById(1L)).thenReturn(Optional.of(author));
+		when(libraryManagementRepository.existsByEmail("another@example.com")).thenReturn(true);
+
+		assertThrows(DuplicateResourceException.class, () -> service.updateAuthor(1L, request));
+
+		verify(libraryManagementRepository, never()).save(any(Author.class));
+	}
+
+	// ==================== BOOK TESTS ====================
+
+	@Test
+	void createNewBookSuccessDefaultAvailabilityTrue() {
+
+		CreateBookRequest request = new CreateBookRequest();
+		request.setTitle("Java");
+		request.setIsbn("ISBN-001");
+		request.setAuthorId(1L);
+		request.setAvailable(null);
+
+		when(bookRepository.existsByIsbn("ISBN-001")).thenReturn(false);
+		when(libraryManagementRepository.findById(1L)).thenReturn(Optional.of(author));
+		when(bookRepository.save(any(Book.class))).thenAnswer(invocation -> {
+			Book saved = invocation.getArgument(0);
+			saved.setId(1L);
+			return saved;
+		});
+
+		BookResponse response = service.createNewBook(request);
+
+		assertNotNull(response);
+		assertEquals("Java", response.getTitle());
+		assertTrue(response.getAvailable());
+		assertEquals(1L, response.getAuthorId());
+	}
+
+	@Test
+	void createNewBookDuplicateIsbn() {
+
+		CreateBookRequest request = new CreateBookRequest();
+		request.setIsbn("ISBN-001");
+
+		when(bookRepository.existsByIsbn("ISBN-001")).thenReturn(true);
+
+		assertThrows(DuplicateResourceException.class, () -> service.createNewBook(request));
+
+		verify(bookRepository, never()).save(any(Book.class));
+	}
+
+	@Test
+	void createNewBookAuthorNotFound() {
+
+		CreateBookRequest request = new CreateBookRequest();
+		request.setIsbn("ISBN-001");
+		request.setAuthorId(99L);
+
+		when(bookRepository.existsByIsbn("ISBN-001")).thenReturn(false);
+		when(libraryManagementRepository.findById(99L)).thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () -> service.createNewBook(request));
+	}
+
+	@Test
+	void getAllBooksSuccess() {
+
+		when(bookRepository.findAll()).thenReturn(List.of(book));
+
+		List<BookResponse> result = service.getAllBooks();
+
+		assertEquals(1, result.size());
+		assertEquals("Java", result.get(0).getTitle());
+	}
+
+	@Test
+	void getBookByIdSuccess() {
+
+		when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+
+		BookResponse response = service.getBookById(1L);
+
+		assertEquals(1L, response.getId());
+		assertEquals("Java", response.getTitle());
+	}
+
+	@Test
+	void getBookByIdNotFound() {
+
+		when(bookRepository.findById(99L)).thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () -> service.getBookById(99L));
+	}
+
+	@Test
+	void updateBookSuccess() {
+
+		CreateBookRequest request = new CreateBookRequest();
+		request.setTitle("Java 8");
+
+		when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+		when(bookRepository.save(any(Book.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		BookResponse response = service.updateBook(1L, request);
+
+		assertEquals("Java 8", response.getTitle());
+	}
+
+	@Test
+	void updateBookAuthorNotFound() {
+
+		CreateBookRequest request = new CreateBookRequest();
+		request.setAuthorId(99L);
+
+		when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+		when(libraryManagementRepository.findById(99L)).thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () -> service.updateBook(1L, request));
+	}
+
+	@Test
+	void deleteBookSuccess() {
+
+		when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+
+		BookResponse response = service.deletebook(1L);
+
+		assertEquals(1L, response.getId());
+		verify(bookRepository).delete(book);
+	}
+
+	@Test
+	void deleteBookNotFound() {
+
+		when(bookRepository.findById(99L)).thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () -> service.deletebook(99L));
+	}
+
+	// ==================== MEMBER TESTS ====================
+
+	@Test
+	void createNewMemberSuccess() {
+
+		CreateMemberRequest request = new CreateMemberRequest();
+		request.setName("Kavya");
+		request.setEmail("kavya@example.com");
+		request.setPhone("9876543210");
+
+		when(memberRepository.existsByEmail("kavya@example.com")).thenReturn(false);
+		when(memberRepository.save(any(Member.class))).thenAnswer(invocation -> {
+			Member saved = invocation.getArgument(0);
+			saved.setId(1L);
+			return saved;
+		});
+
+		MemberResponse response = service.createNewMember(request);
+
+		assertEquals(1L, response.getId());
+		assertEquals("Kavya", response.getName());
+		assertEquals("kavya@example.com", response.getEmail());
+	}
+
+	@Test
+	void createNewMemberDuplicateEmail() {
+
+		CreateMemberRequest request = new CreateMemberRequest();
+		request.setEmail("kavya@example.com");
+
+		when(memberRepository.existsByEmail("kavya@example.com")).thenReturn(true);
+
+		assertThrows(DuplicateResourceException.class, () -> service.createNewMember(request));
+
+		verify(memberRepository, never()).save(any(Member.class));
+	}
+
+	@Test
+	void getAllMembersSuccess() {
+
+		when(memberRepository.findAll()).thenReturn(List.of(member));
+
+		List<MemberResponse> result = service.getAllMembers();
+
+		assertEquals(1, result.size());
+		assertEquals("Kavya", result.get(0).getName());
+	}
+
+	@Test
+	void getMemberByIdSuccess() {
+
+		when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+
+		MemberResponse response = service.getMemberById(1L);
+
+		assertEquals(1L, response.getId());
+		assertEquals("Kavya", response.getName());
+	}
+
+	@Test
+	void getMemberByIdNotFound() {
+
+		when(memberRepository.findById(99L)).thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () -> service.getMemberById(99L));
+	}
+
+	@Test
+	void updateMemberSuccess() {
+
+		CreateMemberRequest request = new CreateMemberRequest();
+		request.setName("Updated Kavya");
+		request.setPhone("9999999999");
+
+		when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+		when(memberRepository.save(any(Member.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		MemberResponse response = service.updateMember(1L, request);
+
+		assertEquals("Updated Kavya", response.getName());
+		assertEquals("9999999999", response.getPhone());
+	}
+
+	// ==================== BORROW BOOK TESTS ====================
+
+	@Test
+	void borrowNewBookSuccess() {
+
+		CreateBorrowRequest request = new CreateBorrowRequest();
+		request.setBookId(1L);
+		request.setMemberId(1L);
+
+		when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+		when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+
+		when(borrowBookRepository.existsByMemberIdAndBookIdAndStatusIn(eq(1L), eq(1L), anyList())).thenReturn(false);
+
+		when(borrowBookRepository.countByMemberIdAndStatusIn(eq(1L), anyList())).thenReturn(0L);
+
+		when(bookRepository.save(any(Book.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		when(borrowBookRepository.save(any(BorrowRecord.class))).thenAnswer(invocation -> {
+			BorrowRecord saved = invocation.getArgument(0);
+			saved.setId(1L);
+			return saved;
+		});
+
+		BorrowResponse response = service.borrowNewBook(request);
+
+		assertNotNull(response);
+		assertEquals(1L, response.getBookId());
+		assertEquals(1L, response.getMemberId());
+		assertEquals(BorrowStatus.ACTIVE, response.getStatus());
+		assertEquals(LocalDate.now(), response.getBorrowedAt());
+		assertEquals(LocalDate.now().plusDays(14), response.getDueDate());
+		assertFalse(book.getAvailable());
+
+		verify(bookRepository).save(book);
+		verify(borrowBookRepository).save(any(BorrowRecord.class));
+	}
+
+	@Test
+	void borrowNewBookBookNotFound() {
+
+		CreateBorrowRequest request = new CreateBorrowRequest();
+		request.setBookId(99L);
+		request.setMemberId(1L);
+
+		when(bookRepository.findById(99L)).thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () -> service.borrowNewBook(request));
+
+		verifyNoInteractions(memberRepository, borrowBookRepository);
+	}
+
+	@Test
+	void borrowNewBookMemberNotFound() {
+
+		CreateBorrowRequest request = new CreateBorrowRequest();
+		request.setBookId(1L);
+		request.setMemberId(99L);
+
+		when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+		when(memberRepository.findById(99L)).thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () -> service.borrowNewBook(request));
+
+		verifyNoInteractions(borrowBookRepository);
+	}
+
+	@Test
+	void borrowNewBook_SameMemberAlreadyBorrowedBook() {
+
+		CreateBorrowRequest request = new CreateBorrowRequest();
+		request.setBookId(1L);
+		request.setMemberId(1L);
+
+		// The book is unavailable because it is already borrowed.
+		book.setAvailable(false);
+
+		when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+		when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+
+		// This check must happen before checking book availability.
+		when(borrowBookRepository.existsByMemberIdAndBookIdAndStatusIn(eq(1L), eq(1L), anyList())).thenReturn(true);
+
+		assertThrows(BookAlreadyBorrowedException.class, () -> service.borrowNewBook(request));
+
+		// The availability check should stop the request only if the
+		// member has not already borrowed this book.
+		verify(borrowBookRepository, never()).countByMemberIdAndStatusIn(any(Long.class), anyList());
+
+		verify(bookRepository, never()).save(any(Book.class));
+		verify(borrowBookRepository, never()).save(any(BorrowRecord.class));
+	}
+
+	@Test
+	void borrowNewBook_BookUnavailableToAnotherMember() {
+
+		CreateBorrowRequest request = new CreateBorrowRequest();
+		request.setBookId(1L);
+		request.setMemberId(2L);
+
+		book.setAvailable(false);
+
+		Member anotherMember = new Member();
+		anotherMember.setId(2L);
+		anotherMember.setName("Another Member");
+
+		when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+		when(memberRepository.findById(2L)).thenReturn(Optional.of(anotherMember));
+
+		when(borrowBookRepository.existsByMemberIdAndBookIdAndStatusIn(eq(2L), eq(1L), anyList())).thenReturn(false);
+
+		assertThrows(ResourceNotFoundException.class, () -> service.borrowNewBook(request));
+
+		verify(borrowBookRepository, never()).countByMemberIdAndStatusIn(any(Long.class), anyList());
+
+		verify(borrowBookRepository, never()).save(any(BorrowRecord.class));
+	}
+
+	@Test
+	void borrowNewBook_BorrowLimitExceeded() {
+
+		CreateBorrowRequest request = new CreateBorrowRequest();
+		request.setBookId(1L);
+		request.setMemberId(1L);
+
+		when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+		when(memberRepository.findById(1L)).thenReturn(Optional.of(member));
+
+		when(borrowBookRepository.existsByMemberIdAndBookIdAndStatusIn(eq(1L), eq(1L), anyList())).thenReturn(false);
+
+		when(borrowBookRepository.countByMemberIdAndStatusIn(eq(1L), anyList())).thenReturn(5L);
+
+		assertThrows(BorrowLimitExceededException.class, () -> service.borrowNewBook(request));
+
+		verify(borrowBookRepository, never()).save(any(BorrowRecord.class));
+		verify(bookRepository, never()).save(any(Book.class));
+	}
+
+	// ==================== RETURN BOOK TESTS ====================
+
+	@Test
+	void returnBorrowedBook_Success() {
+
+		when(borrowBookRepository.findById(1L)).thenReturn(Optional.of(borrowRecord));
+
+		when(bookRepository.save(any(Book.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		when(borrowBookRepository.save(any(BorrowRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		BorrowResponse response = service.returnBorrowedBook(1L);
+
+		assertEquals(BorrowStatus.RETURNED, response.getStatus());
+		assertEquals(LocalDate.now(), response.getReturnedAt());
+		assertTrue(book.getAvailable());
+
+		verify(bookRepository).save(book);
+		verify(borrowBookRepository).save(borrowRecord);
+	}
+
+	@Test
+	void returnBorrowedBook_AlreadyReturned() {
+
+		borrowRecord.setStatus(BorrowStatus.RETURNED);
+		borrowRecord.setReturnedAt(LocalDate.now());
+
+		when(borrowBookRepository.findById(1L)).thenReturn(Optional.of(borrowRecord));
+
+		assertThrows(BookAlreadyReturnedException.class, () -> service.returnBorrowedBook(1L));
+
+		verify(borrowBookRepository, never()).save(any(BorrowRecord.class));
+	}
+
+	@Test
+	void returnBorrowedBook_RecordNotFound() {
+
+		when(borrowBookRepository.findById(99L)).thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () -> service.returnBorrowedBook(99L));
+	}
+
+	// ==================== BORROW HISTORY TESTS ====================
+
+	@Test
+	void getMemberBorrowHistory_Success() {
+
+		when(memberRepository.existsById(1L)).thenReturn(true);
+		when(borrowBookRepository.findByMemberId(1L)).thenReturn(List.of(borrowRecord));
+
+		List<BorrowResponse> result = service.getMemberBorrowHistory(1L);
+
+		assertEquals(1, result.size());
+		assertEquals(1L, result.get(0).getBookId());
+		assertEquals(1L, result.get(0).getMemberId());
+		assertEquals(BorrowStatus.ACTIVE, result.get(0).getStatus());
+	}
+
+	@Test
+	void getMemberBorrowHistory_MemberNotFound() {
+
+		when(memberRepository.existsById(99L)).thenReturn(false);
+
+		assertThrows(ResourceNotFoundException.class, () -> service.getMemberBorrowHistory(99L));
+
+		verify(borrowBookRepository, never()).findByMemberId(99L);
+	}
+}

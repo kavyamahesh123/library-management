@@ -1,0 +1,50 @@
+package com.example.demo.dto;
+
+public class BookResponse {
+
+	}
+	private Long id;
+	private String title;
+	private String isbn;
+	private Boolean available;
+	private Long authorId;
+	private String authorName;
+
+public BookResponseDTO() {
+}
+
+public BookResponseDTO(Long id, String title, String isbn,
+                       Boolean available, Long authorId,
+                       String authorName) {
+    this.id = id;
+    this.title = title;
+    this.isbn = isbn;
+    this.available = available;
+    this.authorId = authorId;
+    this.authorName = authorName;
+}
+
+	public Long getId() {
+		return id;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public String getIsbn() {
+		return isbn;
+	}
+
+	public Boolean getAvailable() {
+		return available;
+	}
+
+	public Long getAuthorId() {
+		return authorId;
+	}
+
+	public String getAuthorName() {
+		return authorName;
+	}
+}

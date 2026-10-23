@@ -1,0 +1,14 @@
+package com.example.demo.service;
+
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+
+public class LibraryManagementService {
+
+	public ResponseEntity<?> createAnAuthor(Map<String, Object> request) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+}

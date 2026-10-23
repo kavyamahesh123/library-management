@@ -1,0 +1,9 @@
+package com.example.entities;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "borrow_records")
+public class BorrowRecord {
+
+}

@@ -1,0 +1,15 @@
+package com.example.demo.service;
+
+import com.example.demo.dto.AuthorResponse;
+import com.example.demo.dto.CreateAuthorRequest;
+
+import jakarta.validation.Valid;
+
+public class LibraryManagementService {
+
+	public AuthorResponse createAuthor(@Valid CreateAuthorRequest request) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+}

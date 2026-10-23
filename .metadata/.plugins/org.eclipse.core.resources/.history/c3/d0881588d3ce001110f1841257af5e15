@@ -1,0 +1,77 @@
+package com.example.demo.service;
+
+import java.time.LocalDate;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import com.example.demo.entities.Author;
+import com.example.demo.entities.Book;
+import com.example.demo.entities.BorrowRecord;
+import com.example.demo.entities.BorrowStatus;
+import com.example.demo.entities.Member;
+import com.example.demo.repo.AuthorRepository;
+import com.example.demo.repo.BookRepository;
+import com.example.demo.repo.BorrowBookRepository;
+import com.example.demo.repo.MemberRepository;
+
+@ExtendWith(MockitoExtension.class)
+public class LibraryManagementServiceTest {
+
+	@Mock
+	private AuthorRepository libraryManagementRepository;
+	
+	@Mock
+	private BookRepository bookRepository;
+
+	@Mock
+	private MemberRepository memberRepository;
+
+	@Mock
+	private BorrowBookRepository borrowBookRepository;
+	
+	@InjectMocks
+	private LibraryManagementService service;
+	
+	private Author author;
+	private Book book;
+	private Member member;
+	private BorrowRecord borrowRecord;
+	
+	@BeforeEach
+	void setUp() {
+	    ReflectionTestUtils.setField(service, "loanDays", 14L);
+	    ReflectionTestUtils.setField(service, "maxActiveBorrowsPerMember", 5);
+
+	    author = new Author();
+	    author.setId(1L);
+	    author.setName("Robert Martin");
+	    author.setEmail("robert@example.com");
+
+	    book = new Book();
+	    book.setId(1L);
+	    book.setTitle("Clean Code");
+	    book.setIsbn("ISBN-001");
+	    book.setAvailable(true);
+	    book.setAuthor(author);
+
+	    member = new Member();
+	    member.setId(1L);
+	    member.setName("Kavya");
+	    member.setEmail("kavya@example.com");
+	    member.setPhone("9876543210");
+
+	    borrowRecord = new BorrowRecord();
+	    borrowRecord.setId(1L);
+	    borrowRecord.setBook(book);
+	    borrowRecord.setMember(member);
+	    borrowRecord.setBorrowedAt(LocalDate.now());
+	    borrowRecord.setDueDate(LocalDate.now().plusDays(14));
+	    borrowRecord.setReturnedAt(null);
+	    borrowRecord.setStatus(BorrowStatus.ACTIVE);
+	}
+}

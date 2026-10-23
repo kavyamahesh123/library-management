@@ -1,0 +1,11 @@
+package com.example.demo.constants;
+
+public class Constants {
+
+	public static final String RESPONSE_CODE = "responseCode";
+	public static final String MESSAGE = "message";
+	public static final String RESPONSE_BODY = "responseBody";
+	public static final String AUTHOR_NOT_FOUND = "Author not found with ID: ";
+	public static final String BOOK_NOT_FOUND = "Book not found with ID: ";
+	public static final String MEMBER_NOT_FOUND = "Member not found with ID: ";
+}

@@ -1,0 +1,173 @@
+package com.example.demo.controller;
+
+import static com.example.demo.constants.Constants.MESSAGE;
+import static com.example.demo.constants.Constants.RESPONSE_BODY;
+import static com.example.demo.constants.Constants.RESPONSE_CODE;
+
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.demo.dto.AuthorResponse;
+import com.example.demo.dto.BookResponse;
+import com.example.demo.dto.CreateAuthorRequest;
+import com.example.demo.dto.CreateBookRequest;
+import com.example.demo.dto.CreateMemberRequest;
+import com.example.demo.dto.MemberResponse;
+import com.example.demo.service.LibraryManagementService;
+
+import jakarta.validation.Valid;
+
+@RestController
+@RequestMapping("/api")
+public class LibraryManagementController {
+
+	private final LibraryManagementService libraryManagementService;
+
+	// AUTHOR Management API's
+	public LibraryManagementController(LibraryManagementService libraryManagementService) {
+		this.libraryManagementService = libraryManagementService;
+	}
+
+	private static final Logger logger = LoggerFactory.getLogger(LibraryManagementController.class);
+
+	@PostMapping("/authors")
+	public ResponseEntity<?> createAuthor(@Valid @RequestBody CreateAuthorRequest request) throws Exception {
+
+		logger.info("Request to create an author...");
+		AuthorResponse response = libraryManagementService.createAuthor(request);
+		return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(RESPONSE_CODE, HttpStatus.CREATED.value(), MESSAGE,
+				"Successfully created an author", RESPONSE_BODY, response));
+	}
+
+	@GetMapping("/authors")
+	public ResponseEntity<?> getAllAuthors() throws Exception {
+
+		logger.info("Request to get all authors...");
+		List<AuthorResponse> response = libraryManagementService.getAllAuthors();
+		return ResponseEntity.status(HttpStatus.OK).body(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
+				"Successfully fetched all authors", RESPONSE_BODY, response));
+	}
+
+	@GetMapping("/authors/{id}")
+	public ResponseEntity<?> getAuthorById(@PathVariable Long id) throws Exception {
+
+		logger.info("Request to get author by ID: {}", id);
+		AuthorResponse response = libraryManagementService.getAuthorById(id);
+		return ResponseEntity.status(HttpStatus.OK).body(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
+				"Successfully fetched an author of id:" + id, RESPONSE_BODY, response));
+	}
+
+	@PutMapping("/authors/{id}")
+	public ResponseEntity<Map<String, Object>> updateAuthor(@PathVariable Long id,
+			@Valid @RequestBody CreateAuthorRequest request) throws Exception {
+
+		logger.info("Request to update author with ID: {}", id);
+		AuthorResponse response = libraryManagementService.updateAuthor(id, request);
+		return ResponseEntity.ok(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
+				"Successfully updated author with ID: " + id, RESPONSE_BODY, response));
+	}
+
+	// ------------------------------------ BOOK Management
+	// API's----------------------------------------------------------------------------------------------------
+
+	@PostMapping("/books")
+	public ResponseEntity<?> createNewBook(@Valid @RequestBody CreateBookRequest request) throws Exception {
+
+		logger.info("Request to create a new book...");
+		BookResponse response = libraryManagementService.createNewBook(request);
+		return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(RESPONSE_CODE, HttpStatus.CREATED.value(), MESSAGE,
+				"Successfully created a new Book", RESPONSE_BODY, response));
+	}
+
+	@GetMapping("/books")
+	public ResponseEntity<?> getAllBooks() throws Exception {
+
+		logger.info("Request to get all books...");
+		List<BookResponse> response = libraryManagementService.getAllBooks();
+		return ResponseEntity.status(HttpStatus.OK).body(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
+				"Successfully fetched all books", RESPONSE_BODY, response));
+	}
+
+	@GetMapping("/books/{id}")
+	public ResponseEntity<?> getBookById(@PathVariable Long id) throws Exception {
+
+		logger.info("Request to get a book by ID: {}", id);
+		BookResponse response = libraryManagementService.getBookById(id);
+		return ResponseEntity.status(HttpStatus.OK).body(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
+				"Successfully fetched a book of id:" + id, RESPONSE_BODY, response));
+	}
+
+	@PutMapping("/books/{id}")
+	public ResponseEntity<?> updateBook(@PathVariable Long id, @Valid @RequestBody CreateBookRequest request)
+			throws Exception {
+
+		logger.info("Request to update a book with ID: {}", id);
+		BookResponse response = libraryManagementService.updateBook(id, request);
+		return ResponseEntity.ok(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
+				"Successfully updated a book with ID: " + id, RESPONSE_BODY, response));
+	}
+
+	@DeleteMapping("/books/{id}")
+	public ResponseEntity<?> deletebook(@PathVariable Long id) throws Exception {
+
+		logger.info("Request to delete a book with ID: {}", id);
+		libraryManagementService.deletebook(id);
+		return ResponseEntity.ok(
+				Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE, "Successfully deleted a book with ID: " + id));
+	}
+
+	// ------------------------------------ MEMBER Management
+	// API's----------------------------------------------------------------------------------------------------
+
+	@PostMapping("/members")
+	public ResponseEntity<?> createNewMember(@Valid @RequestBody CreateMemberRequest request) throws Exception {
+
+		logger.info("Request to register a new member...");
+		MemberResponse response = libraryManagementService.createNewMember(request);
+		return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(RESPONSE_CODE, HttpStatus.CREATED.value(), MESSAGE,
+				"Successfully registered a new member", RESPONSE_BODY, response));
+	}
+
+	@GetMapping("/members")
+	public ResponseEntity<?> getAllMembers() throws Exception {
+
+		logger.info("Request to get all members...");
+		List<MemberResponse> response = libraryManagementService.getAllMembers();
+		return ResponseEntity.status(HttpStatus.OK).body(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
+				"Successfully fetched all members info.", RESPONSE_BODY, response));
+	}
+
+	@GetMapping("/members/{id}")
+	public ResponseEntity<?> getMemberById(@PathVariable Long id) throws Exception {
+
+		logger.info("Request to get a member info. by ID: {}", id);
+		MemberResponse response = libraryManagementService.getMemberById(id);
+		return ResponseEntity.status(HttpStatus.OK).body(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
+				"Successfully fetched a member info. of id:" + id, RESPONSE_BODY, response));
+	}
+
+	@PutMapping("/members/{id}")
+	public ResponseEntity<?> updateMember(@PathVariable Long id, @Valid @RequestBody CreateMemberRequest request)
+			throws Exception {
+
+		logger.info("Request to update a member details with ID: {}", id);
+		MemberResponse response = libraryManagementService.updateMember(id, request);
+		return ResponseEntity.ok(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
+				"Successfully updated a member details with ID: " + id, RESPONSE_BODY, response));
+	}
+	
+	
+}

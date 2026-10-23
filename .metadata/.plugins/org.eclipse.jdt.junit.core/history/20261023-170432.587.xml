@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?><testrun name="LibraryManagementServiceTest" project="library-management-demo" tests="12" started="12" failures="1" errors="0" ignored="0">
+  <testsuite name="com.example.demo.service.LibraryManagementServiceTest" time="2.574" displayname="LibraryManagementServiceTest" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]">
+    <testcase name="updateAuthorNotFound" classname="com.example.demo.service.LibraryManagementServiceTest" time="2.465" displayname="updateAuthorNotFound()" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]/[method:updateAuthorNotFound()]"/>
+    <testcase name="getAuthorByIdNotFound" classname="com.example.demo.service.LibraryManagementServiceTest" time="0.007" displayname="getAuthorByIdNotFound()" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]/[method:getAuthorByIdNotFound()]"/>
+    <testcase name="createAuthor_Success" classname="com.example.demo.service.LibraryManagementServiceTest" time="0.038" displayname="createAuthor_Success()" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]/[method:createAuthor_Success()]"/>
+    <testcase name="createAuthorDuplicateEmailThrowsException" classname="com.example.demo.service.LibraryManagementServiceTest" time="0.006" displayname="createAuthorDuplicateEmailThrowsException()" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]/[method:createAuthorDuplicateEmailThrowsException()]"/>
+    <testcase name="createNewBookAuthorNotFound" classname="com.example.demo.service.LibraryManagementServiceTest" time="0.004" displayname="createNewBookAuthorNotFound()" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]/[method:createNewBookAuthorNotFound()]"/>
+    <testcase name="getAllAuthorsSuccess" classname="com.example.demo.service.LibraryManagementServiceTest" time="0.007" displayname="getAllAuthorsSuccess()" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]/[method:getAllAuthorsSuccess()]"/>
+    <testcase name="createNewBookSuccessDefaultAvailabilityTrue" classname="com.example.demo.service.LibraryManagementServiceTest" time="0.007" displayname="createNewBookSuccessDefaultAvailabilityTrue()" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]/[method:createNewBookSuccessDefaultAvailabilityTrue()]"/>
+    <testcase name="getAllBooksSuccess" classname="com.example.demo.service.LibraryManagementServiceTest" time="0.016" displayname="getAllBooksSuccess()" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]/[method:getAllBooksSuccess()]">
+      <failure>
+        <expected>Java</expected>
+        <actual>Clean Code</actual>
+        org.opentest4j.AssertionFailedError: expected: &lt;Java&gt; but was: &lt;Clean Code&gt;&#13;
+	at org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)&#13;
+	at org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)&#13;
+	at org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:201)&#13;
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:184)&#13;
+	at org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:179)&#13;
+	at org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:1188)&#13;
+	at com.example.demo.service.LibraryManagementServiceTest.getAllBooksSuccess(LibraryManagementServiceTest.java:264)&#13;
+&#13;
+
+      </failure>
+    </testcase>
+    <testcase name="getAuthorByIdSuccess" classname="com.example.demo.service.LibraryManagementServiceTest" time="0.004" displayname="getAuthorByIdSuccess()" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]/[method:getAuthorByIdSuccess()]"/>
+    <testcase name="createNewBookDuplicateIsbn" classname="com.example.demo.service.LibraryManagementServiceTest" time="0.004" displayname="createNewBookDuplicateIsbn()" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]/[method:createNewBookDuplicateIsbn()]"/>
+    <testcase name="updateAuthorSuccess" classname="com.example.demo.service.LibraryManagementServiceTest" time="0.004" displayname="updateAuthorSuccess()" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]/[method:updateAuthorSuccess()]"/>
+    <testcase name="updateAuthorDuplicateEmail" classname="com.example.demo.service.LibraryManagementServiceTest" time="0.005" displayname="updateAuthorDuplicateEmail()" uniqueid="[engine:junit-jupiter]/[class:com.example.demo.service.LibraryManagementServiceTest]/[method:updateAuthorDuplicateEmail()]"/>
+  </testsuite>
+</testrun>

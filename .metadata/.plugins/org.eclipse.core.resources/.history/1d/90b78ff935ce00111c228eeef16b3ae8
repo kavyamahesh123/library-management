@@ -1,0 +1,58 @@
+package com.example.demo.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+
+public class CreateBookRequest {
+
+	@NotBlank(message = "Book title is required")
+	@Size(max = 150, message = "Title cannot exceed 150 characters")
+	private String title;
+
+	@NotBlank(message = "ISBN is required")
+	@Size(max = 20, message = "ISBN cannot exceed 20 characters")
+	private String isbn;
+
+	private Boolean available = true;
+
+	@NotNull(message = "Author ID is required")
+	@Positive(message = "Author ID must be a positive number")
+	private Long authorId;
+
+	public CreateBookRequest() {
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getIsbn() {
+		return isbn;
+	}
+
+	public void setIsbn(String isbn) {
+		this.isbn = isbn;
+	}
+
+	public Boolean getAvailable() {
+		return available;
+	}
+
+	public void setAvailable(Boolean available) {
+		this.available = available;
+	}
+
+	public Long getAuthorId() {
+		return authorId;
+	}
+
+	public void setAuthorId(Long authorId) {
+		this.authorId = authorId;
+	}
+}

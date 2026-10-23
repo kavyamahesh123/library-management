@@ -1,0 +1,88 @@
+package com.example.demo.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.example.demo.dto.AuthorResponse;
+import com.example.demo.dto.BookResponse;
+import com.example.demo.dto.CreateAuthorRequest;
+import com.example.demo.dto.CreateBookRequest;
+import com.example.demo.entities.Author;
+import com.example.demo.exceptions.DuplicateResourceException;
+import com.example.demo.exceptions.ResourceNotFoundException;
+import com.example.demo.repo.AuthorRepository;
+import com.example.demo.repo.BookRepository;
+
+import jakarta.validation.Valid;
+
+@Service
+public class LibraryManagementService {
+
+	private final AuthorRepository libraryManagementRepository;
+	private final BookRepository bookRepository;
+
+	public LibraryManagementService(AuthorRepository libraryManagementRepository, BookRepository bookRepository) {
+		this.libraryManagementRepository = libraryManagementRepository;
+		this.bookRepository = bookRepository;
+		
+	}
+
+	public AuthorResponse createAuthor(@Valid CreateAuthorRequest request) {
+
+		if (request.getEmail() != null && libraryManagementRepository.existsByEmail(request.getEmail())) {
+			throw new DuplicateResourceException("An author with this email already exists.");
+		}
+
+		Author author = new Author();
+		author.setName(request.getName());
+		author.setEmail(request.getEmail());
+
+		Author savedAuthor = libraryManagementRepository.save(author);
+
+		return new AuthorResponse(savedAuthor.getId(), savedAuthor.getName(), savedAuthor.getEmail());
+	}
+
+	public List<AuthorResponse> getAllAuthors() {
+
+		return libraryManagementRepository.findAll().stream()
+				.map(author -> new AuthorResponse(author.getId(), author.getName(), author.getEmail())).toList();
+	}
+
+	public AuthorResponse getAuthorById(Long id) {
+
+		Author author = libraryManagementRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Author not found with ID: " + id));
+
+		return new AuthorResponse(author.getId(), author.getName(), author.getEmail());
+	}
+
+	public AuthorResponse updateAuthor(Long id, @Valid CreateAuthorRequest request) {
+
+		// Check whether the author exists
+		Author author = libraryManagementRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Author not found with ID: " + id));
+
+		// Check whether the email belongs to another author
+		if (request.getEmail() != null && !request.getEmail().equals(author.getEmail())
+				&& libraryManagementRepository.existsByEmail(request.getEmail())) {
+
+			throw new DuplicateResourceException("Email already exists: " + request.getEmail());
+		}
+
+		// Update author details
+		author.setName(request.getName());
+		author.setEmail(request.getEmail());
+
+		// Save updated author
+		Author updatedAuthor = libraryManagementRepository.save(author);
+
+		return new AuthorResponse(updatedAuthor.getId(), updatedAuthor.getName(), updatedAuthor.getEmail());
+	}
+
+	public BookResponse createNewBook(@Valid CreateBookRequest request) {
+		
+		
+	}
+
+}

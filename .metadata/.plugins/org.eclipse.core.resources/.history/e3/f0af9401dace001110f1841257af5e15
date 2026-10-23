@@ -1,0 +1,368 @@
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      description: Resource ID
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+  responses:
+    BadRequest:
+      description: Invalid request body or validation failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+    NotFound:
+      description: Requested resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+    Conflict:
+      description: Resource conflict, such as a duplicate or invalid borrowing state
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+    InternalServerError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+  schemas:
+    CreateAuthorRequest:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+          example: Robert Martin
+        email:
+          type: string
+          format: email
+          example: robert@example.com
+
+    UpdateAuthorRequest:
+      type: object
+      description: Fields are optional for partial updates.
+      properties:
+        name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+
+    AuthorResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: Robert Martin
+        email:
+          type: string
+          format: email
+          example: robert@example.com
+
+    CreateBookRequest:
+      type: object
+      required: [title, isbn, authorId]
+      properties:
+        title:
+          type: string
+          example: Clean Code
+        isbn:
+          type: string
+          example: ISBN-001
+        available:
+          type: boolean
+          nullable: true
+          default: true
+          description: Defaults to true when omitted or null during creation.
+        authorId:
+          type: integer
+          format: int64
+          example: 1
+
+    UpdateBookRequest:
+      type: object
+      description: Fields are optional for partial updates.
+      properties:
+        title:
+          type: string
+          nullable: true
+        isbn:
+          type: string
+          nullable: true
+        available:
+          type: boolean
+          nullable: true
+        authorId:
+          type: integer
+          format: int64
+          nullable: true
+
+    BookResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        title:
+          type: string
+          example: Clean Code
+        isbn:
+          type: string
+          example: ISBN-001
+        available:
+          type: boolean
+          example: true
+        authorId:
+          type: integer
+          format: int64
+          example: 1
+        authorName:
+          type: string
+          example: Robert Martin
+
+    CreateMemberRequest:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+          example: Kavya
+        email:
+          type: string
+          format: email
+          example: kavya@example.com
+        phone:
+          type: string
+          example: '9876543210'
+
+    UpdateMemberRequest:
+      type: object
+      description: Fields are optional for partial updates.
+      properties:
+        name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+
+    MemberResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: Kavya
+        email:
+          type: string
+          format: email
+          example: kavya@example.com
+        phone:
+          type: string
+          example: '9876543210'
+
+    CreateBorrowRequest:
+      type: object
+      required: [bookId, memberId]
+      properties:
+        bookId:
+          type: integer
+          format: int64
+          minimum: 1
+          example: 1
+        memberId:
+          type: integer
+          format: int64
+          minimum: 1
+          example: 1
+
+    BorrowResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 10
+        bookId:
+          type: integer
+          format: int64
+          example: 1
+        bookName:
+          type: string
+          example: Clean Code
+        memberId:
+          type: integer
+          format: int64
+          example: 1
+        memberName:
+          type: string
+          example: Kavya
+        borrowedAt:
+          type: string
+          format: date
+          example: '2026-10-23'
+        dueDate:
+          type: string
+          format: date
+          example: '2026-11-06'
+        returnedAt:
+          type: string
+          format: date
+          nullable: true
+          example: null
+        status:
+          type: string
+          enum: [ACTIVE, OVERDUE, RETURNED]
+          example: ACTIVE
+
+    AuthorEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 201
+        message:
+          type: string
+          example: Successfully created an author
+        responseBody:
+          $ref: '#/components/schemas/AuthorResponse'
+
+    AuthorListEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+        responseBody:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuthorResponse'
+
+    BookEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 201
+        message:
+          type: string
+        responseBody:
+          $ref: '#/components/schemas/BookResponse'
+
+    BookListEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+        responseBody:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookResponse'
+
+    MemberEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 201
+        message:
+          type: string
+        responseBody:
+          $ref: '#/components/schemas/MemberResponse'
+
+    MemberListEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+        responseBody:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberResponse'
+
+    BorrowEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 201
+        message:
+          type: string
+        responseBody:
+          $ref: '#/components/schemas/BorrowResponse'
+
+    BorrowListEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+        responseBody:
+          type: array
+          items:
+            $ref: '#/components/schemas/BorrowResponse'
+
+    MessageEnvelope:
+      type: object
+      properties:
+        responseCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: "Successfully deleted a book with ID: 1"
+
+    ApiError:
+      type: object
+      description: Error shape based on the application's global exception response.
+      properties:
+        status:
+          type: integer
+          example: 404
+        error:
+          type: string
+          example: "Not Found"
+        message:
+          type: string
+          example: "Book not found with ID: 99"
+        path:
+          type: string
+          example: "/api/books/99"

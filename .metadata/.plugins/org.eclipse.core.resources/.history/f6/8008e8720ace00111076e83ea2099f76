@@ -1,0 +1,8 @@
+package com.example.entities.copy;
+
+public enum BorrowStatus {
+
+	ACTIVE,
+    RETURNED,
+    OVERDUE
+}

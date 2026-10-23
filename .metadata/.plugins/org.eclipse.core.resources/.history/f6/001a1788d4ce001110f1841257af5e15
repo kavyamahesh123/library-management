@@ -1,0 +1,229 @@
+package com.example.demo.service;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import com.example.demo.dto.AuthorResponse;
+import com.example.demo.dto.BookResponse;
+import com.example.demo.dto.CreateAuthorRequest;
+import com.example.demo.dto.CreateBookRequest;
+import com.example.demo.entities.Author;
+import com.example.demo.entities.Book;
+import com.example.demo.entities.BorrowRecord;
+import com.example.demo.entities.BorrowStatus;
+import com.example.demo.entities.Member;
+import com.example.demo.exceptions.DuplicateResourceException;
+import com.example.demo.exceptions.ResourceNotFoundException;
+import com.example.demo.repo.AuthorRepository;
+import com.example.demo.repo.BookRepository;
+import com.example.demo.repo.BorrowBookRepository;
+import com.example.demo.repo.MemberRepository;
+
+@ExtendWith(MockitoExtension.class)
+public class LibraryManagementServiceTest {
+
+	@Mock
+	private AuthorRepository libraryManagementRepository;
+
+	@Mock
+	private BookRepository bookRepository;
+
+	@Mock
+	private MemberRepository memberRepository;
+
+	@Mock
+	private BorrowBookRepository borrowBookRepository;
+
+	@InjectMocks
+	private LibraryManagementService service;
+
+	private Author author;
+	private Book book;
+	private Member member;
+	private BorrowRecord borrowRecord;
+
+	@BeforeEach
+	void setUp() {
+		ReflectionTestUtils.setField(service, "loanDays", 14L);
+		ReflectionTestUtils.setField(service, "maxActiveBorrowsPerMember", 5);
+
+		author = new Author();
+		author.setId(1L);
+		author.setName("Robert Martin");
+		author.setEmail("robert@example.com");
+
+		book = new Book();
+		book.setId(1L);
+		book.setTitle("Clean Code");
+		book.setIsbn("ISBN-001");
+		book.setAvailable(true);
+		book.setAuthor(author);
+
+		member = new Member();
+		member.setId(1L);
+		member.setName("Kavya");
+		member.setEmail("kavya@example.com");
+		member.setPhone("9876543210");
+
+		borrowRecord = new BorrowRecord();
+		borrowRecord.setId(1L);
+		borrowRecord.setBook(book);
+		borrowRecord.setMember(member);
+		borrowRecord.setBorrowedAt(LocalDate.now());
+		borrowRecord.setDueDate(LocalDate.now().plusDays(14));
+		borrowRecord.setReturnedAt(null);
+		borrowRecord.setStatus(BorrowStatus.ACTIVE);
+	}
+
+	@Test
+	void createAuthor_Success() {
+		CreateAuthorRequest request = new CreateAuthorRequest();
+		request.setName("Robert Martin");
+		request.setEmail("robert@example.com");
+
+		when(libraryManagementRepository.existsByEmail(request.getEmail())).thenReturn(false);
+		when(libraryManagementRepository.save(any(Author.class))).thenAnswer(invocation -> {
+			Author saved = invocation.getArgument(0);
+			saved.setId(1L);
+			return saved;
+		});
+
+		AuthorResponse response = service.createAuthor(request);
+
+		assertNotNull(response);
+		assertEquals(1L, response.getId());
+		assertEquals("Robert Martin", response.getName());
+		assertEquals("robert@example.com", response.getEmail());
+
+		verify(libraryManagementRepository).save(any(Author.class));
+	}
+
+	@Test
+	void createAuthorDuplicateEmailThrowsException() {
+		CreateAuthorRequest request = new CreateAuthorRequest();
+		request.setName("Robert Martin");
+		request.setEmail("robert@example.com");
+
+		when(libraryManagementRepository.existsByEmail(request.getEmail())).thenReturn(true);
+
+		assertThrows(DuplicateResourceException.class, () -> service.createAuthor(request));
+
+		verify(libraryManagementRepository, never()).save(any(Author.class));
+	}
+
+	@Test
+	void getAllAuthorsSuccess() {
+		when(libraryManagementRepository.findAll()).thenReturn(List.of(author));
+
+		List<AuthorResponse> result = service.getAllAuthors();
+
+		assertEquals(1, result.size());
+		assertEquals("Robert Martin", result.get(0).getName());
+	}
+
+	@Test
+	void getAuthorByIdSuccess() {
+		when(libraryManagementRepository.findById(1L)).thenReturn(Optional.of(author));
+
+		AuthorResponse response = service.getAuthorById(1L);
+
+		assertEquals(1L, response.getId());
+		assertEquals("Robert Martin", response.getName());
+	}
+
+	@Test
+	void getAuthorByIdNotFound() {
+		when(libraryManagementRepository.findById(99L)).thenReturn(Optional.empty());
+
+		assertThrows(ResourceNotFoundException.class, () -> service.getAuthorById(99L));
+	}
+
+	@Test
+	void updateAuthorSuccess() {
+		CreateAuthorRequest request = new CreateAuthorRequest();
+		request.setName("Updated Author");
+		request.setEmail("updated@example.com");
+
+		when(libraryManagementRepository.findById(1L)).thenReturn(Optional.of(author));
+		when(libraryManagementRepository.existsByEmail("updated@example.com")).thenReturn(false);
+		when(libraryManagementRepository.save(any(Author.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+		AuthorResponse response = service.updateAuthor(1L, request);
+
+		assertEquals("Updated Author", response.getName());
+		assertEquals("updated@example.com", response.getEmail());
+	}
+
+	@Test
+	void updateAuthorNotFound() {
+		when(libraryManagementRepository.findById(99L)).thenReturn(Optional.empty());
+
+		CreateAuthorRequest request = new CreateAuthorRequest();
+
+		assertThrows(ResourceNotFoundException.class, () -> service.updateAuthor(99L, request));
+	}
+
+	@Test
+	void updateAuthorDuplicateEmail() {
+		Author anotherAuthor = new Author();
+		anotherAuthor.setId(2L);
+		anotherAuthor.setName("Another Author");
+		anotherAuthor.setEmail("another@example.com");
+
+		CreateAuthorRequest request = new CreateAuthorRequest();
+		request.setEmail("another@example.com");
+
+		when(libraryManagementRepository.findById(1L)).thenReturn(Optional.of(author));
+		when(libraryManagementRepository.existsByEmail("another@example.com")).thenReturn(true);
+
+		assertThrows(DuplicateResourceException.class, () -> service.updateAuthor(1L, request));
+
+		verify(libraryManagementRepository, never()).save(any(Author.class));
+	}
+	
+	// ==================== BOOK TESTS ====================
+
+	@Test
+	void createNewBookSuccessDefaultAvailabilityTrue() {
+	    CreateBookRequest request = new CreateBookRequest();
+	    request.setTitle("Clean Code");
+	    request.setIsbn("ISBN-001");
+	    request.setAuthorId(1L);
+	    request.setAvailable(null);
+
+	    when(bookRepository.existsByIsbn("ISBN-001")).thenReturn(false);
+	    when(libraryManagementRepository.findById(1L))
+	            .thenReturn(Optional.of(author));
+	    when(bookRepository.save(any(Book.class)))
+	            .thenAnswer(invocation -> {
+	                Book saved = invocation.getArgument(0);
+	                saved.setId(1L);
+	                return saved;
+	            });
+
+	    BookResponse response = service.createNewBook(request);
+
+	    assertNotNull(response);
+	    assertEquals("Clean Code", response.getTitle());
+	    assertTrue(response.getAvailable());
+	    assertEquals(1L, response.getAuthorId());
+	}
+}
