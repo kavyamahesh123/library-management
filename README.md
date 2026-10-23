@@ -48,7 +48,7 @@ mvn -version
 If the project is in a Git repository:
 
 ``` bash
-git clone <https://github.com/kavyamahesh123/library-management>
+git clone <repository-url>
 cd <project-directory>
 ```
 
