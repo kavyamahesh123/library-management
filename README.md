@@ -286,7 +286,7 @@ If enabled in `application.properties`, open
 Use the JDBC URL and credentials configured by the application. For the
 example configuration above:
 
--   JDBC URL: `jdbc:h2:mem:librarydb`
+-   JDBC URL: `jdbc:h2:mem:testdb`
 -   User Name: `sa`
 -   Password: leave blank
 
