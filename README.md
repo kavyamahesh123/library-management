@@ -48,7 +48,7 @@ mvn -version
 If the project is in a Git repository:
 
 ``` bash
-git clone <repository-url>
+git clone <https://github.com/kavyamahesh123/library-management>
 cd <project-directory>
 ```
 
@@ -62,11 +62,11 @@ Review `src/main/resources/application.properties`. For an in-memory H2
 database, configuration typically resembles:
 
 ``` properties
-spring.datasource.url=jdbc:h2:mem:librarydb
-spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driver-class-name=org.h2.Driver
 spring.datasource.username=sa
 spring.datasource.password=
-spring.jpa.hibernate.ddl-auto=update
+spring.jpa.hibernate.ddl-auto=create-drop
 spring.h2.console.enabled=true
 spring.h2.console.path=/h2-console
 ```
