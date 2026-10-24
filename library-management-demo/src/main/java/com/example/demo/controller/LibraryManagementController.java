@@ -1,13 +1,10 @@
 package com.example.demo.controller;
 
-import static com.example.demo.constants.Constants.MESSAGE;
-import static com.example.demo.constants.Constants.RESPONSE_BODY;
-import static com.example.demo.constants.Constants.RESPONSE_CODE;
+import static com.example.demo.constants.Constants.*;
 
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -53,7 +50,7 @@ public class LibraryManagementController {
 		AuthorResponse response = libraryManagementService.createAuthor(request);
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(RESPONSE_CODE, HttpStatus.CREATED.value(), MESSAGE,
-				"Successfully created an author", RESPONSE_BODY, response));
+				SUCCESSFULLY_CREATED_AN_AUTHOR, RESPONSE_BODY, response));
 	}
 
 	@GetMapping("/authors")
@@ -63,7 +60,7 @@ public class LibraryManagementController {
 		List<AuthorResponse> response = libraryManagementService.getAllAuthors();
 
 		return ResponseEntity.status(HttpStatus.OK).body(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
-				"Successfully fetched all authors", RESPONSE_BODY, response));
+				SUCCESSFULLY_FETCHED_ALL_AUTHOR, RESPONSE_BODY, response));
 	}
 
 	@GetMapping("/authors/{id}")
@@ -73,7 +70,7 @@ public class LibraryManagementController {
 		AuthorResponse response = libraryManagementService.getAuthorById(id);
 
 		return ResponseEntity.status(HttpStatus.OK).body(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
-				"Successfully fetched an author of id:" + id, RESPONSE_BODY, response));
+				SUCCESSFULLY_FETCHED_AN_AUTHOR + id, RESPONSE_BODY, response));
 	}
 
 	@PutMapping("/authors/{id}")
@@ -84,11 +81,11 @@ public class LibraryManagementController {
 		AuthorResponse response = libraryManagementService.updateAuthor(id, request);
 
 		return ResponseEntity.ok(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
-				"Successfully updated author with ID: " + id, RESPONSE_BODY, response));
+				SUCCESSFULLY_UPDATED_AN_AUTHOR + id, RESPONSE_BODY, response));
 	}
 
-	// ------------------------------------ BOOK Management
-	// API's----------------------------------------------------------------------------------------------------
+	// -----------------BOOK
+	// ManagementAPI's-----------------------------------------
 
 	@PostMapping("/books")
 	public ResponseEntity<?> createNewBook(@Valid @RequestBody CreateBookRequest request) throws Exception {
@@ -97,7 +94,7 @@ public class LibraryManagementController {
 		BookResponse response = libraryManagementService.createNewBook(request);
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(RESPONSE_CODE, HttpStatus.CREATED.value(), MESSAGE,
-				"Successfully created a new Book", RESPONSE_BODY, response));
+				SUCCESSFULLY_CREATED_NEW_BOOK, RESPONSE_BODY, response));
 	}
 
 	@GetMapping("/books")
@@ -107,7 +104,7 @@ public class LibraryManagementController {
 		List<BookResponse> response = libraryManagementService.getAllBooks();
 
 		return ResponseEntity.status(HttpStatus.OK).body(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
-				"Successfully fetched all books", RESPONSE_BODY, response));
+				SUCCESSFULLY_FTECHED_ALL_BOOKS, RESPONSE_BODY, response));
 	}
 
 	@GetMapping("/books/{id}")
@@ -117,7 +114,7 @@ public class LibraryManagementController {
 		BookResponse response = libraryManagementService.getBookById(id);
 
 		return ResponseEntity.status(HttpStatus.OK).body(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
-				"Successfully fetched a book of id:" + id, RESPONSE_BODY, response));
+				SUCCESSFULLY_FTECHED_A_BOOK + id, RESPONSE_BODY, response));
 	}
 
 	@PutMapping("/books/{id}")
@@ -127,8 +124,8 @@ public class LibraryManagementController {
 		logger.info("Request to update a book with ID: {}", id);
 		BookResponse response = libraryManagementService.updateBook(id, request);
 
-		return ResponseEntity.ok(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
-				"Successfully updated a book with ID: " + id, RESPONSE_BODY, response));
+		return ResponseEntity.ok(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE, SUCCESSFULLY_UPDATED_A_BOOK + id,
+				RESPONSE_BODY, response));
 	}
 
 	@DeleteMapping("/books/{id}")
@@ -137,8 +134,8 @@ public class LibraryManagementController {
 		logger.info("Request to delete a book with ID: {}", id);
 		libraryManagementService.deletebook(id);
 
-		return ResponseEntity.ok(
-				Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE, "Successfully deleted a book with ID: " + id));
+		return ResponseEntity
+				.ok(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE, SUCCESSFULLY_DELETED_A_BOOK + id));
 	}
 
 	// ------------------------------------ MEMBER Management
@@ -151,7 +148,7 @@ public class LibraryManagementController {
 		MemberResponse response = libraryManagementService.createNewMember(request);
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(RESPONSE_CODE, HttpStatus.CREATED.value(), MESSAGE,
-				"Successfully registered a new member", RESPONSE_BODY, response));
+				SUCCESSFULLY_REGISTERED_A_MEMBER, RESPONSE_BODY, response));
 	}
 
 	@GetMapping("/members")
@@ -161,7 +158,7 @@ public class LibraryManagementController {
 		List<MemberResponse> response = libraryManagementService.getAllMembers();
 
 		return ResponseEntity.status(HttpStatus.OK).body(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
-				"Successfully fetched all members info.", RESPONSE_BODY, response));
+				SUCCESSFULLY_FETCHED_ALL_MEMBER, RESPONSE_BODY, response));
 	}
 
 	@GetMapping("/members/{id}")
@@ -171,7 +168,7 @@ public class LibraryManagementController {
 		MemberResponse response = libraryManagementService.getMemberById(id);
 
 		return ResponseEntity.status(HttpStatus.OK).body(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
-				"Successfully fetched a member info. of id:" + id, RESPONSE_BODY, response));
+				SUCCESSFULLY_FETCHED_MEMBER + id, RESPONSE_BODY, response));
 	}
 
 	@PutMapping("/members/{id}")
@@ -181,8 +178,8 @@ public class LibraryManagementController {
 		logger.info("Request to update a member details with ID: {}", id);
 		MemberResponse response = libraryManagementService.updateMember(id, request);
 
-		return ResponseEntity.ok(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
-				"Successfully updated a member details with ID: " + id, RESPONSE_BODY, response));
+		return ResponseEntity.ok(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE, SUCCESSFULLY_UPDATED_MEMBER + id,
+				RESPONSE_BODY, response));
 	}
 
 	@PostMapping("/borrows")
@@ -192,7 +189,7 @@ public class LibraryManagementController {
 		BorrowResponse response = libraryManagementService.borrowNewBook(request);
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(RESPONSE_CODE, HttpStatus.CREATED.value(), MESSAGE,
-				"Successfully borrowed a book", RESPONSE_BODY, response));
+				SUCCESSFULLY_BORROWED_BOOK, RESPONSE_BODY, response));
 	}
 
 	@PutMapping("/borrows/{id}/return")
@@ -202,7 +199,7 @@ public class LibraryManagementController {
 		BorrowResponse response = libraryManagementService.returnBorrowedBook(id);
 
 		return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(RESPONSE_CODE, HttpStatus.CREATED.value(), MESSAGE,
-				"Successfully returned a book", RESPONSE_BODY, response));
+				SUCCESSFULLY_RETURNED_BOOK, RESPONSE_BODY, response));
 	}
 
 	@GetMapping("/members/{id}/borrows")
@@ -212,6 +209,6 @@ public class LibraryManagementController {
 		List<BorrowResponse> history = libraryManagementService.getMemberBorrowHistory(memberId);
 
 		return ResponseEntity.ok(Map.of(RESPONSE_CODE, HttpStatus.OK.value(), MESSAGE,
-				"Successfully fetched the borrow history for member with ID: " + memberId, RESPONSE_BODY, history));
+				SUCCESSFULLY_FETCHED_MEMBER_BORROW_HISTORY + memberId, RESPONSE_BODY, history));
 	}
 }
