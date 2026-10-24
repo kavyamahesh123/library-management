@@ -82,4 +82,10 @@ public class GlobalExceptionHandler {
 
 		return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
 	}
+
+	@ExceptionHandler(IllegalStateException.class)
+	public ResponseEntity<APIError> handleIllegalStateException(IllegalStateException ex, HttpServletRequest request) {
+
+		return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
+	}
 }

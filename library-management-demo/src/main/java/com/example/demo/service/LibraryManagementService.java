@@ -203,17 +203,23 @@ public class LibraryManagementService {
 
 	}
 
+	@Transactional
 	public BookResponse deletebook(Long id) {
 
 		Book book = bookRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(BOOK_NOT_FOUND + id));
 
+		// Check whether the book is currently borrowed
+		if (Boolean.FALSE.equals(book.getAvailable())) {
+			throw new IllegalStateException("Cannot delete book with ID: " + id + " because it is currently borrowed.");
+		}
+
 		BookResponse response = new BookResponse(book.getId(), book.getTitle(), book.getIsbn(), book.getAvailable(),
 				book.getAuthor().getId(), book.getAuthor().getName());
 
+	    borrowBookRepository.deleteByBookId(id);
 		bookRepository.delete(book);
 
 		return response;
-
 	}
 
 	public MemberResponse createNewMember(@Valid CreateMemberRequest request) {
